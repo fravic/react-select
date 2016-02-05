@@ -446,6 +446,34 @@ var Select = _react2['default'].createClass({
 		this.refs.input.focus();
 	},
 
+	handleTouchMove: function handleTouchMove(event) {
+		// Set a flag that the view is being dragged
+		this.dragging = true;
+	},
+
+	handleTouchStart: function handleTouchStart(event) {
+		// Set a flag that the view is not being dragged
+		this.dragging = false;
+	},
+
+	handleTouchEnd: function handleTouchEnd(event) {
+		// Check if the view is being dragged, In this case
+		// we don't want to fire the click event (because the user only wants to scroll)
+		if (this.dragging) return;
+
+		// Fire the mouse events
+		this.handleMouseDown(event);
+	},
+
+	handleTouchEndClearValue: function handleTouchEndClearValue(event) {
+		// Check if the view is being dragged, In this case
+		// we don't want to fire the click event (because the user only wants to scroll)
+		if (this.dragging) return;
+
+		// Clear the value
+		this.clearValue(event);
+	},
+
 	handleMouseDown: function handleMouseDown(event) {
 		// if the event was triggered by a mousedown and not the primary
 		// button, or if the component is disabled, ignore it.
@@ -552,13 +580,7 @@ var Select = _react2['default'].createClass({
 					this.popValue();
 				}
 				return;
-			case 9:
-				// tab
-				if (event.shiftKey || !this.state.isOpen) {
-					return;
-				}
-				this.selectFocusedOption();
-				break;
+			case 9: // tab
 			case 13:
 				// enter
 				if (!this.state.isOpen) return;
@@ -850,7 +872,12 @@ var Select = _react2['default'].createClass({
 		if (!this.props.clearable || !this.props.value || this.props.multi && !this.props.value.length || this.props.disabled || this.props.isLoading) return;
 		return _react2['default'].createElement(
 			'span',
-			{ className: 'Select-clear-zone', title: this.props.multi ? this.props.clearAllText : this.props.clearValueText, 'aria-label': this.props.multi ? this.props.clearAllText : this.props.clearValueText, onMouseDown: this.clearValue, onTouchEnd: this.clearValue },
+			{ className: 'Select-clear-zone', title: this.props.multi ? this.props.clearAllText : this.props.clearValueText,
+				'aria-label': this.props.multi ? this.props.clearAllText : this.props.clearValueText,
+				onMouseDown: this.clearValue,
+				onTouchStart: this.handleTouchStart,
+				onTouchMove: this.handleTouchMove,
+				onTouchEnd: this.handleTouchEndClearValue },
 			_react2['default'].createElement('span', { className: 'Select-clear', dangerouslySetInnerHTML: { __html: '&times;' } })
 		);
 	},
@@ -992,7 +1019,14 @@ var Select = _react2['default'].createClass({
 			this.renderHiddenField(valueArray),
 			_react2['default'].createElement(
 				'div',
-				{ ref: 'control', className: 'Select-control', style: this.props.style, onKeyDown: this.handleKeyDown, onMouseDown: this.handleMouseDown, onTouchEnd: this.handleMouseDown },
+				{ ref: 'control',
+					className: 'Select-control',
+					style: this.props.style,
+					onKeyDown: this.handleKeyDown,
+					onMouseDown: this.handleMouseDown,
+					onTouchEnd: this.handleTouchEnd,
+					onTouchStart: this.handleTouchStart,
+					onTouchMove: this.handleTouchMove },
 				this.renderValue(valueArray, isOpen),
 				this.renderInput(valueArray),
 				this.renderLoading(),
@@ -1004,7 +1038,10 @@ var Select = _react2['default'].createClass({
 				{ ref: 'menuContainer', className: 'Select-menu-outer', style: this.props.menuContainerStyle },
 				_react2['default'].createElement(
 					'div',
-					{ ref: 'menu', className: 'Select-menu', style: this.props.menuStyle, onScroll: this.handleMenuScroll, onMouseDown: this.handleMouseDownOnMenu },
+					{ ref: 'menu', className: 'Select-menu',
+						style: this.props.menuStyle,
+						onScroll: this.handleMenuScroll,
+						onMouseDown: this.handleMouseDownOnMenu },
 					this.renderMenu(options, !this.props.multi ? valueArray : null, focusedOption)
 				)
 			) : null
@@ -1063,13 +1100,34 @@ var Value = _react2['default'].createClass({
 		this.props.onRemove(this.props.value);
 	},
 
+	handleTouchEndRemove: function handleTouchEndRemove(event) {
+		// Check if the view is being dragged, In this case
+		// we don't want to fire the click event (because the user only wants to scroll)
+		if (this.dragging) return;
+
+		// Fire the mouse events
+		this.onRemove(event);
+	},
+
+	handleTouchMove: function handleTouchMove(event) {
+		// Set a flag that the view is being dragged
+		this.dragging = true;
+	},
+
+	handleTouchStart: function handleTouchStart(event) {
+		// Set a flag that the view is not being dragged
+		this.dragging = false;
+	},
+
 	renderRemoveIcon: function renderRemoveIcon() {
 		if (this.props.disabled || !this.props.onRemove) return;
 		return _react2['default'].createElement(
 			'span',
 			{ className: 'Select-value-icon',
 				onMouseDown: this.onRemove,
-				onTouchEnd: this.onRemove },
+				onTouchEnd: this.handleTouchEndRemove,
+				onTouchStart: this.handleTouchStart,
+				onTouchMove: this.handleTouchMove },
 			'×'
 		);
 	},
